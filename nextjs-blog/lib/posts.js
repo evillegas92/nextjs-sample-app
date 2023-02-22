@@ -32,3 +32,36 @@ export function getSortedPostsData() {
         }
     });
 }
+
+export function getAllPostIds() {
+    const fileNames = fs.readdirSync(postsDirectory);
+    /* return an array like this:
+        [{params: {id: 'blog-post-id-1'}},
+         {params: {id: 'blog-post-id-2'}},]
+       Each object must have the 'params' key and contain an
+       object with the 'id' key (because the file for the 
+       dynamic route is [id].tsx). Otherwise, getStaticPaths
+       will fail.
+    */
+    return fileNames.map((fileName) => {
+        return {
+            params: {
+                id: fileName.replace(/\.md$/, ''),
+            },
+        };
+    });
+}
+
+export function getPostData(id) {
+    const fullPath = path.join(postsDirectory, `${id}.md`);
+    const fileContents = fs.readFileSync(fullPath, 'utf8');
+
+    // use gray-matter the parse the metadata section in the md file
+    const matterResult = matter(fileContents);
+
+    // Combine the data with the ID.
+    return {
+        id,
+        ...matterResult.data,
+    };
+}
