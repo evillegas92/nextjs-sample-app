@@ -1,6 +1,8 @@
 import fs from 'fs'; /* fs is a Node.js module that let's you read files from the file system. */
 import path from 'path'; /* path is a Node.js module that let's you manipulate file paths. */
 import matter from 'gray-matter';
+import { remark } from 'remark';
+import html from 'remark-html';
 
 const postsDirectory = path.join(process.cwd(), 'data');
 
@@ -52,16 +54,23 @@ export function getAllPostIds() {
     });
 }
 
-export function getPostData(id) {
+export async function getPostData(id) {
     const fullPath = path.join(postsDirectory, `${id}.md`);
     const fileContents = fs.readFileSync(fullPath, 'utf8');
 
     // use gray-matter the parse the metadata section in the md file
     const matterResult = matter(fileContents);
 
+    // use remark to convert markdown into HTML
+    const processedContent = await remark()
+        .use(html)
+        .process(matterResult.content);
+    const contentHtml = processedContent.toString();
+
     // Combine the data with the ID.
     return {
         id,
+        contentHtml,
         ...matterResult.data,
     };
 }
